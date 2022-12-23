@@ -2,6 +2,7 @@
 
 
 #include "CodeTest.h"
+#include "PointerTest.h"
 
 // Sets default values
 ACodeTest::ACodeTest()
@@ -78,7 +79,7 @@ void ACodeTest::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("함수 실행 결과 : %s"), *result1);
 	*/
 
-
+/*
 	int32 checker = 123;
 	//만약 checker에 들어있는 값이 짝수라면 "even"이라고 출력한다
 	//그렇지 않고, 변수의 값이 홀수라면 "odd"라고 출력한다
@@ -95,6 +96,44 @@ void ACodeTest::BeginPlay()
 			UE_LOG(LogTemp, Warning, TEXT("%d * %d = %d"), i, j, i * j);
 		}
 	}
+	*/
+
+	/*
+	distances.Add("Seoul", 250.5f);
+	distances.Add("Incheon", 450.5f);
+	distances.Add("Sungnam", 135.5f);
+
+	FString myKey = "Incheon";
+	UE_LOG(LogTemp, Warning, TEXT("%s : %f"), *myKey, distances[myKey]);
+
+	for (auto dist : distances) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s - %f"), *dist.Key, dist.Value);
+	}
+	*/
+
+// 	ages = { 3, 4, 5, 6, 7, 8 };
+// 
+// 	UE_LOG(LogTemp, Warning, TEXT("Array Length : %d"), ages.Num());
+// 
+// 	for (int32 i = 0; i < ages.Num(); i++) 
+// 	{
+// 		UE_LOG(LogTemp, Warning, TEXT("%d"), ages[i]);
+// 	}
+		
+// int32 number1 = 10;
+// int32 copyNum = number1;
+// number1 = 30;
+// copyNum = number1;
+// 
+// UE_LOG(LogTemp, Warning, TEXT("number1 : %d, compyNum : %d"), number1, copyNum);
+
+if (pointertest != nullptr) // 크래시를 막기위한 보호조치
+{
+	*(pointertest->myAge) = 15;
+}
+
+//pointertest->realAge = 20;
 
 }
 /*
@@ -132,7 +171,7 @@ FString ACodeTest::StringAppender(FString a, FString b) {
 
 FString ACodeTest::StringAppender1(FString firstname, FString lastname)
 {
-	return  firstname + lastname;
+	return  firstname + lastname;ㄷ
 }
 */
 

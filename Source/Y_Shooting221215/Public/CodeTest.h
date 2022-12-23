@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "CodeTest.generated.h"
+#include "PointerTest.h"
+#include "CodeTest.generated.h" //헤더 추가할때는 이 줄 위에다가 추가해줄 것
+
+
 
 UCLASS()
 class Y_SHOOTING221215_API ACodeTest : public AActor
@@ -71,5 +74,14 @@ public:
 	//UFUNCTION(BlueprintPure)
 	*/
 
+	UPROPERTY(EditAnywhere)
+	TArray<int32> ages;
 
+	UPROPERTY(EditAnywhere)
+	TMap<FString, float> distances;
+
+	UPROPERTY(EditAnywhere, Category = CodeVariable) 
+	class APointerTest* pointertest; //헤더를 선언하지 않아도 된다(#include "" 대신에)
+
+	
 };
