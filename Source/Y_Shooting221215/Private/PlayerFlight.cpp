@@ -9,13 +9,14 @@
 #include "Gameframework/Controller.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 APlayerFlight::APlayerFlight()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	//생성자 함수에서 충돌 박스 컴포넌트를 생성한다
 	boxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collision"));
 
@@ -29,7 +30,6 @@ APlayerFlight::APlayerFlight()
 
 	//박스 콜리전의 충돌 처리 프리셋을 "PlayerPreset"으로 설정한다
 	boxComp->SetCollisionProfileName(TEXT("PlayerPreset"));
-
 
 
 
@@ -61,7 +61,7 @@ void APlayerFlight::BeginPlay()
 
 	if (playerCon != nullptr)
 	{
-		UEnhancedInputLocalPlayerSubsystem* subsys 
+		UEnhancedInputLocalPlayerSubsystem* subsys
 			= ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerCon->GetLocalPlayer());
 		//어떤 타입의 서브시스템을 가져올건지 알려줘야한다(>> 캐스팅 해야한다)
 
@@ -70,7 +70,23 @@ void APlayerFlight::BeginPlay()
 			subsys->AddMappingContext(imc_myMapping, 0);
 		}
 	}
-	
+
+	//현재 색상 값을 저장한다
+	UMaterialInterface* iMat = meshComp->GetMaterial(0); //Index 는 0번이다.  (Materials 0번의 0, 각 Element들을 배열로 사용하기 때문이다)
+
+	//Hashed : 암호화된 것이 해독된
+	FHashedMaterialParameterInfo param = FHashedMaterialParameterInfo(TEXT("Param"));
+
+	//Material Insterface 에서 벡터 파라미터 값을 initColor 변수에 저장한다.
+	iMat->GetVectorParameterValue(param, initColor);
+
+	UE_LOG(LogTemp, Warning, TEXT("R : %f, G : &f, B : %f"), initColor.R, initColor.G, initColor.B);
+
+	//Material Interface를 이요해서 Material Instance 기준으로 Material Instance Dynmaic 개체를 만든다.
+	dynamicMat = UMaterialInstanceDynamic::Create(iMat, this);
+
+	//생성한 Dynamic Material을 메시에 설정한다
+	meshComp->SetMaterial(0, dynamicMat);
 }
 
 // Called every frame
@@ -89,7 +105,8 @@ void APlayerFlight::Tick(float DeltaTime)
 	FVector dir = GetActorLocation() + direction * moveSpeed * DeltaTime;
 
 	//4.현재 액터의 위치 좌표를 앞에서 구한 새 좌표로 갱신한다.
-	SetActorLocation(dir);
+	SetActorLocation(dir, true);
+
 
 }
 
@@ -129,6 +146,21 @@ void APlayerFlight::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 // 	direction.Y = h;
 // }
 
+void APlayerFlight::ReservationHitColor(float time)
+{
+	//1. 색상을 Red 색깔로 변경한다
+	dynamicMat->SetVectorParameterValue(TEXT("Param"), (FVector4)FLinearColor::Red);
+
+	//2. 원래 색상으로 되돌리는 함수를 바인딩한 타이머를 예약한다
+	GetWorld()->GetTimerManager().SetTimer(colorTimer, this, &APlayerFlight::ChangeOriginColor, time, false);
+}
+
+void APlayerFlight::ChangeOriginColor()
+{
+	//원래 컬러 값으로 되돌린다
+	dynamicMat->SetVectorParameterValue(TEXT("Param"), (FVector4)initColor);
+}
+
 void APlayerFlight::Horizontal(const FInputActionValue& value)
 {
 	h = value.Get<float>();
@@ -136,7 +168,7 @@ void APlayerFlight::Horizontal(const FInputActionValue& value)
 	direction.Y = h;
 }
 
-void APlayerFlight::Vertical (const FInputActionValue& value)
+void APlayerFlight::Vertical(const FInputActionValue& value)
 {
 	v = value.Get<float>();
 	//UE_LOG(LogTemp, Warning, TEXT("h = %.4f"), h);
@@ -164,11 +196,14 @@ void APlayerFlight::FireBullet()
 	FRotator spawnRotation = FRotator(90.0f, 0, 0);//pitch yaw roll 순으로 작성해줘야한다. 엔진에서는 yaw pitch roll순
 	GetWorld()->SpawnActor<ABullet>(bulletFactory, spawnPosition, spawnRotation);
 	FActorSpawnParameters param; //구조체라 데이터가 저장되어있는 단순한 형태이므로 *사용하지 않는다
-	
+
 	//오브젝트가 생성되었는데 이미 이자리에 다른 오브젝트가 위치해있을 경우. 생성되자마자 충돌이 발생한다.
 	//그럴 때 어떻게 할건지 설정해주는 것이다
 	param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	GetWorld()->SpawnActor<ABullet>(bulletFactory, spawnPosition, spawnRotation, param);
-	
+
+	//총알 발사 효과음을 실행한다.
+	UGameplayStatics::PlaySound2D(this, fireSound); // #include "Kismet ..." 추가 
+
 }
